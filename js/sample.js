@@ -13,11 +13,13 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'',{
 
 
     var collideBG;
+    var button;
 
     function preload(){
         game.load.image('paddle', './assets/paddle.png');
         game.load.image('ball', './assets/ball.png');
         game.load.image('collideBG', './assets/germs.png');
+        game.load.image('button', './assets/buttonStart.png');
     }
 
     function create(){
@@ -26,14 +28,24 @@ var game = new Phaser.Game(1024,768, Phaser.AUTO,'',{
         //create germs
         collideBG = create_collideBG(800,300);
 
-
+        
         //end of creating germs
         paddle1 = create_paddle(0, game.world.centerY);
         paddle2 = create_paddle(game.world.width - 16, game.world.centerY);
 
          ball = create_ball(game.world.centerX, game.world.centerY);
 
-         game.input.onDown.add( launch_ball,this );
+        
+
+
+         //creating button
+         button = game.add.button(game.world.centerX, 0,'button' ,actionOnClick, this);
+         button.height = 200;
+         button.width = 200;
+    }
+
+    function actionOnClick(){
+        game.input.onDown.add( launch_ball,this );
     }
 
     function update(){

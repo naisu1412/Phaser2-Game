@@ -9,6 +9,8 @@ var game = new Phaser.Game(768, 800, Phaser.AUTO, '',{
 function preload(){
     game.load.image('player' , './assets/playerPlatform.png');      // preloading the player image
     game.load.image('ball', './assets/ball.png');     //preloading the ball image
+    game.load.image('button', './assets/buttonStart.png');  //preloading the button start
+    game.load.image('germ','./assets/germs.png')
 }
 
 
@@ -16,7 +18,9 @@ var player; //will contain the paddle
 var enterKey;   //holds the event
 var ball_launched;  // is the ball launched bool
 var ball_velocity;  //will hold the initial speed of the ball
+var germ;
 
+var superGerm;
 
 function create(){
 
@@ -28,10 +32,50 @@ function create(){
     ball_velocity = 400;    //initial velocity  
     /* Adding an event on return key */
     enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-    enterKey.onDown.add(launch_ball, this);
-    game.input.onDown.add( launch_ball,this );
+    enterKey.onDown.add(restartGame, this);
+   
+
+
+     //creating button
+     button = game.add.button(game.world.width - 50, 0,'button' ,launchBall, this);
+     button.height = 50;
+     button.width = 50;
+     //end of creating button
+
+       
+     /*creating enemies*/
+      /*
+     germ = game.add.group();
+     for (var i = 0; i < 10; i++)
+     {
+         germ.create(game.world.randomX, game.world.randomY, 'germ', 0);
+         germ.children[i].anchor.setTo(0.5,0.5);
+         game.physics.arcade.enable(germ.children[i]);
+         germ.children[i].body.collideWorldBounds = true;
+         germ.children[i].body.immovable = true; 
+     }
+
+     for (var i = 0, len = germ.children.length; i < len; i++) { 
+          console.log(germ.children[i]);
+       
+        }
+
+        */
+     
+       germ = game.add.group();
+       for (var i = 0; i < 10; i++)
+       {
+           germ.create(game.world.randomX, game.world.randomY, 'germ', 0);
+           germ.children[i].anchor.setTo(0.5,0.5);
+           game.physics.arcade.enable(germ.children[i]);
+           germ.children[i].body.collideWorldBounds = true;
+           germ.children[i].body.immovable = true; 
+       }
+  
+    
 
 }
+
 
 
 function update(){
@@ -50,6 +94,12 @@ function update(){
 
 
     game.physics.arcade.collide(player,ball);   //ball will collide with the player
+    game.physics.arcade.collide(germ,ball);   //ball will collide with the player
+
+
+
+
+   
 }
 
 
@@ -75,9 +125,18 @@ function create_ball(x,y){
     ball.body.collideWorldBounds = true;
     ball.body.bounce.setTo(1,1  );      //bounce of the ball
 
-
     return ball;
 
+}
+
+function create_germs(x,y){
+    var germ = game.add.sprite(x,y,'germ');
+    germ.anchor.setTo(0.5,0.5);
+    game.physics.arcade.enable(germ);
+    germ.body.collideWorldBounds = true;
+    germ.body.immovable = true;  
+
+    return germ;
 }
 
 
@@ -128,6 +187,15 @@ function launch_ball(){
         ball_launched = true;
     }
 }
+
+function launchBall(){
+    launch_ball();   // set the ball at its starting position and reset the game
+ }
+ 
+ function restartGame(){
+     this.game.state.restart();  //restarts the game
+ }
+ 
 
 
 
