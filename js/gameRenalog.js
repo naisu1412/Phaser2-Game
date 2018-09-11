@@ -8,9 +8,10 @@ var game = new Phaser.Game(768, 1024, Phaser.AUTO, '',{
 
 function preload(){
     game.load.image('player' , './assets/playerPlatform.png');      // preloading the player image
-    game.load.image('ball', './assets/ball.png');     //preloading the ball image
+    game.load.image('ball', './assets/player.png');     //preloading the ball image
     game.load.image('button', './assets/buttonStart.png');  //preloading the button start
     game.load.image('germ','./assets/germs.png');
+    game.load.image('germ_N','./assets/germs.png');
     game.load.image('superGerm','./assets/superGerm.png');
     game.load.image('background', './assets/background.png');
     game.load.image('blockage', './assets/tablet.png');
@@ -24,6 +25,7 @@ var ball_launched;  // is the ball launched bool
 var ball_velocity;  //will hold the initial speed of the ball
 var germ;
 var blockage;
+var germ_N;
 
 var superGerm;
 
@@ -40,7 +42,7 @@ function create(){
    
    
     ball_launched = false;  //set ball launch to false on start
-    ball_velocity = 600;    //initial velocity  
+    ball_velocity = 400;    //initial velocity  
     /* Adding an event on return key */
     enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
     enterKey.onDown.add(restartGame, this);
@@ -73,8 +75,11 @@ function create(){
       createGroupOfGerms(7,65,150);
       createGroupOfGerms(8,20,150 + 70);
       createGroupOfGerms(8,-10,150 + 70 + 70);
-      germFunction();  //adding physics to each of every germ
+      germFunction(false);  //adding physics to each of every germ
+     
       
+
+      germ_N = game.add.group();
     
 
     
@@ -83,8 +88,14 @@ function create(){
 }
 
 
-
+var rot = true;
+var superGermArray = [6];
+var superGermArrayCounter = 0;  // counter for the superGerm
 function update(){
+    if(germ.length == 0){
+        console.log( "You won" );
+        restartGame();
+    }
     control_paddle(player,game.input.x);
     //control player movement
     if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
@@ -99,63 +110,124 @@ function update(){
     //end of controlling player movement
 
 
-    game.physics.arcade.collide(player,ball);   //ball will collide with the player
-    game.physics.arcade.collide(blockage,ball);   //ball will collide with the player
     
     //code for bouncing and delete on collision
     for(var i = 0; i < germ.length; i++){
-       
-       if( game.physics.arcade.overlap( germ.children[i],ball)){
+   
+       if( game.physics.arcade.overlap( germ.children[i],ball)  ||  game.physics.arcade.overlap( germ_N.children[i],ball) ){
     //    console.log( germ.children[i].key );
+        rot = !rot;     //change rotation
         game.physics.arcade.collide(germ,ball);   //ball will collide with the germ
         game.physics.arcade.collide(superGerm,ball);   //ball will collide with the germ
+        game.physics.arcade.collide(germ_N,ball);   //ball will collide with the germ
+
+
         if(germ.children[i].key == 'superGerm'){
-            createSingleGerm(germ.children[i].x, germ.children[i].y);
-          // console.log( 'germ created' );
-            germ.remove(germ.children[i]);  
+            createSingleGerm(germ.children[i].x, germ.children[i].y, 11 );
+
+          
+
+            germ.remove( germ.children[i] ); 
+            // adding the superGerm to the array
+            superGermArray[superGermArrayCounter] = germ.children[i];
+            superGermArrayCounter += 1;
             break; 
+          
+        }else if( germ_N.children[i].key == "germ_N" ){
+            
+        } 
+        else{
+            
+            
            
-        }else{
-            germ.remove(germ.children[i]);  
+       
+            germ.remove( germ.children[i] );  
+          
+           
+        
            // console.log( 'germ deleted' ); 
         }
         
        }
    
     }
-    germFunction();    
+    //change rotation if the ball hit a blockage or a player
+    if( game.physics.arcade.overlap( ball,blockage) || game.physics.arcade.overlap( ball,player) ){
+        rot = !rot;     //change rotation
+      }
+
+
+    game.physics.arcade.collide(player,ball);   //ball will collide with the player
+    game.physics.arcade.collide(blockage,ball);   //ball will collide with the player
+
+
+       // add its functionality
+    germFunction(false);
+
+
+   if(ball_launched){
+       if(rot == true){
+
+        ball.angle += 10 ;  
+       }else{
+        ball.angle -= 10 ;  
+
+       }
+   }
 }
 
 function createSingleGerm(x,y){
-    germ.create(x, y, 'germ', 0);   
+    
+    germ_N.create(x, y, 'germ_N', 0);   
+    germFunction(true);
+
 }
+var superGermCounter = 0;
 function createGroupOfGerms( amount, _xpos, _ypos){
+   
     for (var i = 0, ypos = _ypos, xpos = _xpos, xposInc = 65, yposInc = 80, origXpos = xpos; i < amount; i++)
     {
                
         var rand = game.rnd.integerInRange(1, 2); 
-        if(rand == 1){
-            germ.create(180 + xpos, 0 + ypos, 'germ', 0);   
+        
+        if(rand == 1 && superGermCounter < 6){
+            germ.create(180 + xpos, 0 + ypos, 'superGerm', 0); 
+            superGermCounter += 1;   
         }else{
-            germ.create(180 + xpos, 0 + ypos, 'superGerm', 0);   
+            germ.create(180 + xpos, 0 + ypos, 'germ', 0);
+           
         }
-        console.log(rand);       
+       // console.log(rand);       
         xpos+=xposInc;
     }
 
 }
 
-function germFunction(){
-    for(var i= 0; i < germ.length;i++){
-        germ.children[i].anchor.setTo(0.5,0.5);
-        game.physics.arcade.enable(germ.children[i]);
-        germ.children[i].body.collideWorldBounds = true;
-        germ.children[i].body.immovable = true; 
-        germ.children[i].width = 70;
-        germ.children[i].height = 70;
-
-  
+function germFunction(isItN){
+    if(isItN == false){
+        for(var i= 0; i < germ.length;i++){
+            germ.children[i].anchor.setTo(0.5,0.5);
+            game.physics.arcade.enable(germ.children[i]);
+            germ.children[i].body.collideWorldBounds = true;
+            germ.children[i].body.immovable = true; 
+            germ.children[i].width = 70;
+            germ.children[i].height = 70;
+    
+      
+        }
+    }else{
+        for(var i= 0; i < germ_N.length;i++){
+            germ_N.children[i].anchor.setTo(0.5,0.5);
+            game.physics.arcade.enable(germ_N.children[i]);
+            germ_N.children[i].body.collideWorldBounds = true;
+            germ_N.children[i].body.immovable = true; 
+            germ_N.children[i].width = 70;
+            germ_N.children[i].height = 70;
+    
+      
+        }
     }
+   
 }
 
 function createGroupOfBlockage( amount, _xpos, _ypos){
@@ -175,7 +247,7 @@ function blockageFunction(){
         blockage.children[i].body.immovable = true; 
         blockage.children[i].width = 50;
         blockage.children[i].height = 50;
-        blockage.children[i].alpha = 0;
+        blockage.children[i].alpha = 1;
     }
 }
 
@@ -198,8 +270,8 @@ function create_player(x,y){
 
 function create_ball( x,y ){
     var ball = game.add.sprite(x,y,'ball');
-    ball.height = 40;
-    ball.width = 40;
+    ball.height = 25;
+    ball.width = 50;
     ball.anchor.setTo(0.5,0.5);
     game.physics.arcade.enable(ball);
     ball.body.collideWorldBounds = true;
@@ -217,10 +289,10 @@ function create_block(){
     createGroupOfBlockage(4,0,75 + 100);
     createGroupOfBlockage(3,0,75 + 150);
     createGroupOfBlockage(2,0,75 + 200);
-    for(var i = 1; i < 10; i++){
-        createGroupOfBlockage(2,0,75 + 200 + (50 *i));
+    for(var i = 1; i < 9; i++){
+        createGroupOfBlockage(1,0,75 + 200 + (50 *i));
     }
-
+    createGroupOfBlockage(2,0,75 + 200 + (50 * 9));
     createGroupOfBlockage(3,0,75 + 200 + (50 *9) + 50);
     createGroupOfBlockage(3,0,75 + 200 + (50 *9) + 100);
     createGroupOfBlockage(4,0,75 + 200 + (50 *9) + 150);
@@ -231,9 +303,9 @@ function create_block(){
     createGroupOfBlockage(2,game.world.width- 50 * 2,800 + 25);
     createGroupOfBlockage(2,game.world.width- 50 * 2,750 + 25);
     createGroupOfBlockage(3,game.world.width- 50 * 2,700 + 25);
-    createGroupOfBlockage(4,game.world.width- 50 * 2,650 + 25);
-    createGroupOfBlockage(4,game.world.width- 50 * 2,600 + 25);
-    createGroupOfBlockage(3,game.world.width- 50 * 2,550 + 25);
+    createGroupOfBlockage(4,game.world.width- 50 * 2.5,650 + 25);
+    createGroupOfBlockage(4,game.world.width- 50 * 3,600 + 25);
+    createGroupOfBlockage(3,game.world.width- 50 * 3,550 + 25); 
     createGroupOfBlockage(3,game.world.width- 50 * 3,500 + 25);
     createGroupOfBlockage(3,game.world.width- 50 * 3,450 + 25);
     createGroupOfBlockage(3,game.world.width- 50 * 3,400 + 25);
@@ -304,7 +376,9 @@ function launchBall(){
  }
  
  function restartGame(){
+    superGermCounter = 0;
      this.game.state.restart();  //restarts the game
+     superGermArrayCounter = 0;
  }
  
 
