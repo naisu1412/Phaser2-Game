@@ -1,4 +1,4 @@
-var game = new Phaser.Game(768, 1024, Phaser.AUTO, '',{
+var game = new Phaser.Game(768, 1024, Phaser.CANVAS, '',{
     preload : preload,
     create: create,
     update: update
@@ -21,6 +21,9 @@ function preload(){
     game.load.image('info3', './assets/infos/3.png');
     game.load.image('info4', './assets/infos/4.png');
     game.load.image('info5', './assets/infos/5.png');
+    game.load.image('infoX', './assets/gameOver.png');
+    game.load.image('infoWin', './assets/successGame.jpg');
+
     game.load.physics('physicsData', './json/physicsData.json');
     
 }
@@ -33,16 +36,14 @@ var ball_velocity;  //will hold the initial speed of the ball
 var germ;
 var blockage;
 var germ_N;
-var maxTime = 90;
+var maxTime = 90;    //timer of thhe game
 var counter;
 var text = 0;
-
-
-
+var gameOver;
 var superGerm;
 
 function create(){
-     counter = maxTime;
+    counter = maxTime;
     var back_background = game.add.sprite(0,0, 'back_background' );
     var background = game.add.sprite(-50,-50,'background');
     background.width = game.world.width + 90;   //width of the background
@@ -93,21 +94,23 @@ function create(){
       germ_N = game.add.group();
       
       //adding timer to the game
-      text = game.add.text(0 , 0 , 'Time: 90' ,{ 
+      text = game.add.text(0 , 0 , 'Time: ' + maxTime ,{ 
           font: '30px Arial',
           fill: "#000"
         });
 
 
         // info for the game
-        info1 = game.add.sprite(game.world.width * 2, game.world.height * 2 ,'info1');
-        info1.anchor.setTo(0.5,0.5);
-        info1.alpha = 0;
-        info1.height = 700;
-        info1.width = 700;
-        info1.inputEnabled = true;
-        info1.events.onInputDown.add(hideInfo, this);
+      
         
+
+       info1 = game.add.sprite(game.world.width * 2, game.world.height * 2 ,'info1');
+       info1.anchor.setTo(0.5,0.5);
+       info1.alpha = 0;
+       info1.height = 700;
+       info1.width = 700;
+       info1.inputEnabled = true;
+       info1.events.onInputDown.add(hideInfo, this);
 
         launchBall();   //starts the game
 }
@@ -115,10 +118,27 @@ function create(){
 
 //hide the info 
 function hideInfo(){
-    info1.alpha  = .5;
-   // console.log("hello there");
-    info1.y = game.world.height * 2;
-    game.paused = false;
+    if(info1.key == 'infoX'){
+        restartGame();
+    }else if(info1.key == 'infoWin'){
+        restartGame();
+    }
+    else{
+        info1.alpha  = .5;
+        // console.log("hello there");
+         info1.y = game.world.height * 2;
+         game.paused = false;
+    }
+}
+
+
+//hide the gameOver Panel
+function hideGameOver(){
+    /*
+    gameOver.alpha = 0;
+    restartGame();
+    gameOver.x = game.world.x  * 2;
+    */
 }
 
 
@@ -154,25 +174,40 @@ function CreateGroupGermsManual(){
   
         console.log( 'reloaded' );
         CreateGroupGermsManual();
-
-
     }
-    
 }
 
 function update(){
 
-  
     if(counter <= 0 ){
         console.log('game over');
-        restartGame();
+        /*
+        gameOver.alpha = 1; // show gameOver
+        game.paused = true; // pause the game
+        gameOver.x = 0; // return the loc of the gameOver
+        */
+
+       info1.x = game.world.width / 2;
+       info1.y = game.world.height / 2;
+       info1.alpha = 1;
+       game.paused = true;
+       info1.loadTexture('infoX');
+
     }
 
 
 
     if(germ.length == 0 && germ_N.length == 0){
         console.log( "You won" );
-        restartGame();
+        info1.x = game.world.width / 2;
+        info1.y = game.world.height / 2;
+
+        info1.width = (game.world.width) - 100 ;
+        info1.height = (game.world.height /2) + 50;
+
+        info1.alpha = 1;
+        game.paused = true;
+        info1.loadTexture('infoWin');
     }
     control_paddle(player,game.input.x);
     //control player movement
@@ -210,9 +245,6 @@ function update(){
     
     
     }
-
-  
-
 
     for(var i = 0; i < germ.length; i++){
    
