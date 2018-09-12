@@ -13,7 +13,8 @@ function preload(){
     game.load.image('germ','./assets/germs.png');
     game.load.image('germ_N','./assets/germs.png');
     game.load.image('superGerm','./assets/superGerm.png');
-    game.load.image('background', './assets/background.png');
+    game.load.image('background', './assets/background.png');   // this is the kidney
+    game.load.image('back_background', './assets/background.jpg');   // this is the kidney
     game.load.image('blockage', './assets/tablet.png');
     game.load.physics('physicsData', './json/physicsData.json');
 }
@@ -26,12 +27,16 @@ var ball_velocity;  //will hold the initial speed of the ball
 var germ;
 var blockage;
 var germ_N;
+var counter = 60;
+var text = 0;
+
+
 
 var superGerm;
 
 function create(){
   
-
+    var back_background = game.add.sprite(0,0, 'back_background' );
     var background = game.add.sprite(-50,-50,'background');
     background.width = game.world.width + 90;   //width of the background
     background.height = game.world.height + 100;    //height of the background
@@ -76,23 +81,46 @@ function create(){
       createGroupOfGerms(8,20,150 + 70);
       createGroupOfGerms(8,-10,150 + 70 + 70);
       germFunction(false);  //adding physics to each of every germ
-     
-      
 
       germ_N = game.add.group();
-    
-
+      
+      //adding timer to the game
+      text = game.add.text(0 , 0 , 'Time: 60' ,{ 
+          font: '30px Arial',
+          fill: "#000"
+        });
+  
+       
     
 
       
 }
 
 
+function updateCounter() {
+    //counter for the timer
+    counter--;
+    text.setText('Time: ' + counter);
+
+}
+
+
+
+
+
 var rot = true;
 var superGermArray = [6];
 var superGermArrayCounter = 0;  // counter for the superGerm
 function update(){
-    if(germ.length == 0){
+   
+    if(counter <= 0 ){
+        console.log('game over');
+        restartGame();
+    }
+
+
+
+    if(germ.length == 0 && germ_N.length == 0){
         console.log( "You won" );
         restartGame();
     }
@@ -112,40 +140,41 @@ function update(){
 
     
     //code for bouncing and delete on collision
+
+    for(var w = 0; w < germ_N.length; w++){
+        if(game.physics.arcade.overlap( germ_N.children[w],ball)){
+            console.log( "show dialog" );
+            game.physics.arcade.collide(germ_N,ball);   //ball will collide with the germ
+            germ_N.remove( germ_N.children[w] );  //remove
+        }
+    
+    
+    }
+
+  
+
+
     for(var i = 0; i < germ.length; i++){
    
-       if( game.physics.arcade.overlap( germ.children[i],ball)  ||  game.physics.arcade.overlap( germ_N.children[i],ball) ){
+       if( game.physics.arcade.overlap( germ.children[i],ball) ){
     //    console.log( germ.children[i].key );
         rot = !rot;     //change rotation
         game.physics.arcade.collide(germ,ball);   //ball will collide with the germ
         game.physics.arcade.collide(superGerm,ball);   //ball will collide with the germ
-        game.physics.arcade.collide(germ_N,ball);   //ball will collide with the germ
-
+        
 
         if(germ.children[i].key == 'superGerm'){
-            createSingleGerm(germ.children[i].x, germ.children[i].y, 11 );
-
-          
-
+            createSingleGerm(germ.children[i].x, germ.children[i].y);
             germ.remove( germ.children[i] ); 
             // adding the superGerm to the array
             superGermArray[superGermArrayCounter] = germ.children[i];
             superGermArrayCounter += 1;
             break; 
           
-        }else if( germ_N.children[i].key == "germ_N" ){
-            
-        } 
-        else{
-            
-            
-           
-       
+        }
+        else{     
             germ.remove( germ.children[i] );  
           
-           
-        
-           // console.log( 'germ deleted' ); 
         }
         
        }
@@ -247,7 +276,7 @@ function blockageFunction(){
         blockage.children[i].body.immovable = true; 
         blockage.children[i].width = 50;
         blockage.children[i].height = 50;
-        blockage.children[i].alpha = 1;
+        blockage.children[i].alpha = 1 ;
     }
 }
 
@@ -372,6 +401,10 @@ function launch_ball(){
 }
 
 function launchBall(){
+    if(counter == 60 ){
+        game.time.events.loop(Phaser.Timer.SECOND, updateCounter, this);
+        console.log('call me');
+    }
     launch_ball();   // set the ball at its starting position and reset the game
  }
  
@@ -379,6 +412,7 @@ function launchBall(){
     superGermCounter = 0;
      this.game.state.restart();  //restarts the game
      superGermArrayCounter = 0;
+     counter = 60;
  }
  
 
