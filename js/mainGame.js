@@ -1,16 +1,6 @@
-
-  var game = new Phaser.Game(768, 1024, Phaser.CANVAS, '',{
-    preload : preload,
-    create: create,
-    update: update
-});
-
-
-
-  
+var game_Renal = {
     
-    
-    function preload(){
+    preload: function (){
         game.load.image('player' , './assets/playerPlatform.png');      // preloading the player image
         game.load.image('ball', './assets/player.png');     //preloading the ball image
         game.load.image('button', './assets/buttonStart.png');  //preloading the button start
@@ -30,23 +20,9 @@
     
         game.load.physics('physicsData', './json/physicsData.json');
         
-    }
-    
-    
-    var player; //will contain the paddle
-    var enterKey;   //holds the event
-    var ball_launched;  // is the ball launched bool
-    var ball_velocity;  //will hold the initial speed of the ball
-    var germ;
-    var blockage;
-    var germ_N;
-    var maxTime = 90;    //timer of thhe game
-    var counter;
-    var text = 0;
-    var gameOver;
-    var superGerm;
-    
-    function create(){
+    },
+  
+    create: function (){
         counter = maxTime;
         var back_background = game.add.sprite(0,0, 'back_background' );
         var background = game.add.sprite(-50,-50,'background');
@@ -119,63 +95,9 @@
            info1.events.onInputDown.add(hideInfo, this);
     
             launchBall();   //starts the game
-    }
-    
-    
-    //hide the info 
-    function hideInfo(){
-        if(info1.key == 'infoX'){
-            restartGame();
-        }else if(info1.key == 'infoWin'){
-            restartGame();
-        }
-        else{
-            info1.alpha  = .5;
-            // console.log("hello there");
-             info1.y = game.world.height * 2;
-             game.paused = false;
-        }
-    }
-    
-    
-    
-    
-    function updateCounter() {
-        //counter for time
-        counter--;
-    
-        text.setText('Time: ' + counter);
-    
-    }
-    
-    
-    
-    
-    
-    var rot = true;
-    var superGermArrayCounter = 0;  // counter for the superGerm
-    var playerScore = 0;
-    
-    function CreateGroupGermsManual(){
-        createGroupOfGerms(4,155,100);
-        createGroupOfGerms(6,65,185 + 5);
-        createGroupOfGerms(6,20,185 + 90);
-    
-        console.log( superGermCounter );
-        
-        if(superGermCounter != 5 ){
-            console.log( superGermCounter );
-            for(var w = germ.length; w >= 0; w--){
-                germ.remove( germ.children[w] );
-            }   //clear germ
-            superGermCounter = 0;
-      
-            console.log( 'reloaded' );
-            CreateGroupGermsManual();
-        }
-    }
-    
-    function update(){
+    },
+
+    update: function (){
     
         if(counter <= 0 ){
             console.log('game over');
@@ -286,6 +208,79 @@
            }
        }
     }
+
+}
+
+
+    
+    var player; //will contain the paddle
+    var enterKey;   //holds the event
+    var ball_launched;  // is the ball launched bool
+    var ball_velocity;  //will hold the initial speed of the ball
+    var germ;
+    var blockage;
+    var germ_N;
+    var maxTime = 90;    //timer of thhe game
+    var counter;
+    var text = 0;
+    var gameOver;
+    var superGerm;
+  
+    
+    //hide the info 
+    function hideInfo(){
+        if(info1.key == 'infoX'){
+            restartGame();
+        }else if(info1.key == 'infoWin'){
+            restartGame();
+        }
+        else{
+            info1.alpha  = .5;
+            // console.log("hello there");
+             info1.y = game.world.height * 2;
+             game.paused = false;
+        }
+    }
+    
+    
+    
+    
+    function updateCounter() {
+        //counter for time
+        counter--;
+    
+        text.setText('Time: ' + counter);
+    
+    }
+    
+    
+    
+    
+    
+    var rot = true;
+    var superGermArrayCounter = 0;  // counter for the superGerm
+    var playerScore = 0;
+    
+    function CreateGroupGermsManual(){
+        createGroupOfGerms(4,155,100);
+        createGroupOfGerms(6,65,185 + 5);
+        createGroupOfGerms(6,20,185 + 90);
+    
+        console.log( superGermCounter );
+        
+        if(superGermCounter != 5 ){
+            console.log( superGermCounter );
+            for(var w = germ.length; w >= 0; w--){
+                germ.remove( germ.children[w] );
+            }   //clear germ
+            superGermCounter = 0;
+      
+            console.log( 'reloaded' );
+            CreateGroupGermsManual();
+        }
+    }
+    
+ 
     
     function createSingleGerm(x,y){
         
@@ -398,6 +393,7 @@
     
     
     function create_block(){
+       
         createGroupOfBlockage(20,0,0);
         createGroupOfBlockage(6,0,75);
         createGroupOfBlockage(5,0,75 + 50);
@@ -407,32 +403,34 @@
         for(var i = 1; i < 9; i++){
             createGroupOfBlockage(1,0,75 + 200 + (50 *i));
         }
+        
         createGroupOfBlockage(2,0,75 + 200 + (50 * 9));
         createGroupOfBlockage(3,0,75 + 200 + (50 *9) + 50);
         createGroupOfBlockage(3,0,75 + 200 + (50 *9) + 100);
         createGroupOfBlockage(4,0,75 + 200 + (50 *9) + 150);
         createGroupOfBlockage(5,0,75 + 200 + (50 *9) + 200);
         createGroupOfBlockage(16,0,75 + 200 + (50 *9) + 250);
+
         createGroupOfBlockage(2,game.world.width- 50 * 2,900 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 2,850 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 2,800 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 2,750 + 25);
         createGroupOfBlockage(3,game.world.width- 50 * 2,700 + 25);
         createGroupOfBlockage(4,game.world.width- 50 * 2.5,650 + 25);
+        
         createGroupOfBlockage(4,game.world.width- 50 * 3,600 + 25);
         createGroupOfBlockage(3,game.world.width- 50 * 3,550 + 25); 
         createGroupOfBlockage(3,game.world.width- 50 * 3,500 + 25);
         createGroupOfBlockage(3,game.world.width- 50 * 3,450 + 25);
         createGroupOfBlockage(3,game.world.width- 50 * 3,400 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 2,350 + 25);
-
         createGroupOfBlockage(1,game.world.width- 50 * 1,300 + 25);
         createGroupOfBlockage(1,game.world.width- 50 * 1,250 + 25);
         createGroupOfBlockage(1,game.world.width- 50 * 1,200 + 25);
         createGroupOfBlockage(1,game.world.width- 50 * 1,150 + 25);
+        
         createGroupOfBlockage(1,game.world.width- 50 * 1,100 + 25);
-        createGroupOfBlockage(2,game.world.width- 50 * 2,50 + 25);
-   
+        createGroupOfBlockage(2,game.world.width- 50 * 1,50 + 25);
     }
     
     
@@ -504,6 +502,13 @@
          playerScore = 0;;
      }
      
+    
+
+
+  
+    
+    
+   
     
     
     
