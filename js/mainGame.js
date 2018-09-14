@@ -1,6 +1,7 @@
 var game_Renal = {
     
     preload: function (){
+        
         game.load.image('player' , './assets/playerPlatform.png');      // preloading the player image
         game.load.image('ball', './assets/player.png');     //preloading the ball image
         game.load.image('button', './assets/buttonStart.png');  //preloading the button start
@@ -10,6 +11,7 @@ var game_Renal = {
         game.load.image('background', './assets/background.png');   // this is the kidney
         game.load.image('back_background', './assets/background.jpg');   // this is the kidney
         game.load.image('blockage', './assets/tablet.png');
+        game.load.image('dangerousBlockage', './assets/tablet.png');
         game.load.image('info1', './assets/infos/1.png');
         game.load.image('info2', './assets/infos/2.png');
         game.load.image('info3', './assets/infos/3.png');
@@ -17,12 +19,14 @@ var game_Renal = {
         game.load.image('info5', './assets/infos/5.png');
         game.load.image('infoX', './assets/gameOver.png');
         game.load.image('infoWin', './assets/successGame.jpg');
-    
+        game.load.image( 'renalog_icon','./assets/logo_renalog.png' );
+        game.load.image( 'whiteBG','./assets/whiteBG.png' );
         game.load.physics('physicsData', './json/physicsData.json');
-        
+
     },
   
     create: function (){
+        game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
         counter = maxTime;
         var back_background = game.add.sprite(0,0, 'back_background' );
         var background = game.add.sprite(-50,-50,'background');
@@ -45,19 +49,31 @@ var game_Renal = {
         blockage = game.add.group();
         create_block();
         blockageFunction();
+
+        // creating dangerous blockage
+        dangerousBlockage = game.add.group();
+        create_dangerousBlock();
+        dangerousBlockageFunction();
+        
+        
     
-    
+      
+   
     
          //creating button
         /*
-         button = game.add.button( game.world.width - 50, 0,'button' ,launchBall, this );
-         button.height = 50;
-         button.width = 50;
-    
+         
          button = game.add.button( game.world.width - 50, 100,'button' ,restartGame, this );
          button.height = 50;
          button.width = 50;
-         */
+
+
+
+        button = game.add.button( game.world.width - 50, 0,'button' ,fullScreen, this );
+        button.height = 50;
+        button.width = 50;
+        
+        */
          //end of creating button
     
            
@@ -69,23 +85,28 @@ var game_Renal = {
          
           CreateGroupGermsManual();
     
-         
+          //creating white BG
+          //top left part
+          whiteBG = game.add.sprite(20,20,'whiteBG');
+          
+
+
           //createGroupOfGerms(8,-10,150 + 70 + 70);
           germFunction(false);  //adding physics to each of every germ
-    
           germ_N = game.add.group();
-          
           //adding timer to the game
-          text = game.add.text(0 , 0 , 'Time: ' + maxTime ,{ 
+          text = game.add.text(35 , whiteBG.height /2 , 'Time: ' + maxTime ,{ 
               font: '30px Arial',
               fill: "#000"
             });
-    
-    
+
+            lifeText = game.add.text( 30,70, 'Life: ' , {
+                font:'25px Arial',
+                fill: "#000"
+        
+           });
+         
             // info for the game
-          
-            
-    
            info1 = game.add.sprite(game.world.width * 2, game.world.height * 2 ,'info1');
            info1.anchor.setTo(0.5,0.5);
            info1.alpha = 0;
@@ -94,24 +115,47 @@ var game_Renal = {
            info1.inputEnabled = true;
            info1.events.onInputDown.add(hideInfo, this);
     
+
+
+           renalog_icon = game.add.sprite(0,0,'renalog_icon');  
+           renalog_icon.anchor.setTo(0.5 , 0.5);
+           renalog_icon.height = 76;
+           renalog_icon.width = 178;
+           renalog_icon.y = game.world.height - (renalog_icon.height / 2) - 30;
+           renalog_icon.x = renalog_icon.x + (renalog_icon.width / 2) + 10;
+
+
+           lifeCollection = game.add.group();
+          
+
+           createLifeFunction(lifeText.x + lifeText.width + 20,lifeText.y,25);
             launchBall();   //starts the game
     },
 
     update: function (){
-    
-        if(counter <= 0 ){
+        if(playerLife < 3){
+            lifeCollection.remove(lifeCollection.children[playerLife]);
+        }
+
+
+      
+
+
+        if(counter <= 0 || playerLife <= 0){
             console.log('game over');
            info1.x = game.world.width / 2;
            info1.y = game.world.height / 2;
            info1.alpha = 1;
            game.paused = true;
            info1.loadTexture('infoX');
+           playerLife = 0;
     
         }
     
     
     
         if(germ.length == 0 && germ_N.length == 0){
+            playerLife = 0;
             console.log( "You won" );
             info1.x = game.world.width / 2;
             info1.y = game.world.height / 2;
@@ -123,6 +167,7 @@ var game_Renal = {
             game.paused = true;
             info1.loadTexture('infoWin');
         }
+
         control_paddle(player,game.input.x);
         //control player movement
         if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
@@ -185,13 +230,24 @@ var game_Renal = {
        
         }
         //change rotation if the ball hit a blockage or a player
-        if( game.physics.arcade.overlap( ball,blockage) || game.physics.arcade.overlap( ball,player) ){
+        if( game.physics.arcade.overlap( ball,blockage ) || game.physics.arcade.overlap( ball,player) ){
             rot = !rot;     //change rotation
+          
           }
+
+
+
+          if( game.physics.arcade.overlap( ball,dangerousBlockage ) ){
+            playerLife -= 1;
+            console.log( "player life " + playerLife );
+          }
+
+
     
     
         game.physics.arcade.collide(player,ball);   //ball will collide with the player
         game.physics.arcade.collide(blockage,ball);   //ball will collide with the player
+        game.physics.arcade.collide(dangerousBlockage,ball);   //ball will collide with the player
     
     
            // add its functionality
@@ -223,9 +279,14 @@ var game_Renal = {
     var maxTime = 90;    //timer of thhe game
     var counter;
     var text = 0;
+    var lifeText;
     var gameOver;
     var superGerm;
-  
+    var playerLife = 3;
+    var dangerousBlockage;
+    var renalog_icon;   //renalog icon
+    var whiteBG;
+    var lifeCollection;
     
     //hide the info 
     function hideInfo(){
@@ -288,6 +349,25 @@ var game_Renal = {
         germFunction(true);
     
     }
+
+
+    function createLifeFunction(_xpos, _ypos, _spaces){
+
+        for(var i = 0; i < playerLife; i++){
+            lifeCollection.create( _xpos + (_spaces * i),_ypos, 'ball', 0 );
+            
+        }
+
+
+        for(var z = 0; z<lifeCollection.length;z++){
+            lifeCollection.children[z].angle = 90;
+            lifeCollection.children[z].width = 30;
+            lifeCollection.children[z].height = 15;
+
+        }
+
+    }
+
     var superGermCounter = 0;
     function createGroupOfGerms( amount, _xpos, _ypos){
     
@@ -333,8 +413,6 @@ var game_Renal = {
                 germ_N.children[i].body.immovable = true; 
                 germ_N.children[i].width = 85;
                 germ_N.children[i].height = 85;
-        
-          
             }
         }
        
@@ -348,18 +426,42 @@ var game_Renal = {
         }
     
     }
+
+    function createGroupOfDangerousBlockage( amount, _xpos, _ypos){
+        for (var i = 0, ypos = _ypos, xpos = _xpos, xposInc = 50, yposInc = 80, origXpos = xpos; i < amount; i++)
+        {
+            dangerousBlockage.create(xpos, 0 + ypos, 'dangerousBlockage', 0);           
+            xpos+=xposInc;
+        }
+    
+    }
     
     function blockageFunction(){
         for(var i= 0; i < blockage.length;i++){
             blockage.children[i].anchor.setTo(0.5,0.5);
-            game.physics.arcade.enable(blockage.children[i]);
+            game.physics.arcade.enable( blockage.children[i] );
             blockage.children[i].body.collideWorldBounds = true;
             blockage.children[i].body.immovable = true; 
             blockage.children[i].width = 50;
             blockage.children[i].height = 50;
-            blockage.children[i].alpha = .3;
+            blockage.children[i].alpha = 0;
         }
     }
+
+    function dangerousBlockageFunction(){
+        for(var i= 0; i < dangerousBlockage.length;i++){
+            console.log("test here");
+            dangerousBlockage.children[i].anchor.setTo(0.5,0.5);
+            game.physics.arcade.enable( dangerousBlockage.children[i] );
+            dangerousBlockage.children[i].body.collideWorldBounds = true;
+            dangerousBlockage.children[i].body.immovable = true; 
+            dangerousBlockage.children[i].width = 50;
+            dangerousBlockage.children[i].height = 50;
+            dangerousBlockage.children[i].alpha = 0;
+        }
+        
+    }
+    
     
     
     //create objects
@@ -409,7 +511,7 @@ var game_Renal = {
         createGroupOfBlockage(3,0,75 + 200 + (50 *9) + 100);
         createGroupOfBlockage(4,0,75 + 200 + (50 *9) + 150);
         createGroupOfBlockage(5,0,75 + 200 + (50 *9) + 200);
-        createGroupOfBlockage(16,0,75 + 200 + (50 *9) + 250);
+        
 
         createGroupOfBlockage(2,game.world.width- 50 * 2,900 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 2,850 + 25);
@@ -431,6 +533,13 @@ var game_Renal = {
         
         createGroupOfBlockage(1,game.world.width- 50 * 1,100 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 1,50 + 25);
+    }
+
+
+    function create_dangerousBlock(){
+      
+        createGroupOfDangerousBlockage(16,0,75 + 200 + (50 *9) + 250);
+        
     }
     
     
@@ -494,12 +603,26 @@ var game_Renal = {
      }
      
      function restartGame(){
+        playerLife = 3;
         superGermCounter = 0;
-         this.game.state.restart();  //restarts the game
         info1.alpha = 0; //hides the info every restart
         game.paused = false;
          counter = maxTime;
          playerScore = 0;;
+         this.game.state.restart();  //restarts the game
+
+     }
+
+     function fullScreen(){
+       
+        if (game.scale.isFullScreen)
+        {
+            game.scale.stopFullScreen();
+        }
+        else
+        {
+            game.scale.startFullScreen(false);
+        }
      }
      
     
