@@ -19,13 +19,18 @@ var game_Renal = {
         game.load.image('info5', './assets/infos/5.png');
         game.load.image('infoX', './assets/gameOver.png');
         game.load.image('infoWin', './assets/successGame.jpg');
-        game.load.image( 'renalog_icon','./assets/logo_renalog.png' );
-        game.load.image( 'whiteBG','./assets/whiteBG.png' );
+        game.load.image('renalog_icon','./assets/logo_renalog.png' );
+        game.load.image('whiteBG','./assets/whiteBG.png' );
+        game.load.audio('noiseCollector',['./assets/sounds/noiseCollecter.wav']);
+        game.load.audio('pongScore',['./assets/sounds/pongScore.wav']);
+        game.load.audio('bgm',['./assets/sounds/Pim Poy Pocket.wav']);
         game.load.physics('physicsData', './json/physicsData.json');
 
     },
   
     create: function (){
+       bgmSound =  game.sound.play('bgm' ,1 ,true);
+ 
         game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
         counter = maxTime;
         var back_background = game.add.sprite(0,0, 'back_background' );
@@ -105,15 +110,7 @@ var game_Renal = {
                 fill: "#000"
         
            });
-         
-            // info for the game
-           info1 = game.add.sprite(game.world.width * 2, game.world.height * 2 ,'info1');
-           info1.anchor.setTo(0.5,0.5);
-           info1.alpha = 0;
-           info1.height = 700;
-           info1.width = 700;
-           info1.inputEnabled = true;
-           info1.events.onInputDown.add(hideInfo, this);
+        
     
 
 
@@ -129,43 +126,31 @@ var game_Renal = {
           
 
            createLifeFunction(lifeText.x + lifeText.width + 20,lifeText.y,25);
+
+
+
+            
+            // info for the game
+            info1 = game.add.sprite(game.world.width * 2, game.world.height * 2 ,'info1');
+            info1.anchor.setTo(0.5,0.5);
+            info1.alpha = 0;
+            info1.height = 700;
+            info1.width = 700;
+            info1.inputEnabled = true;
+            info1.events.onInputDown.add(hideInfo, this);
+
+            
             launchBall();   //starts the game
     },
 
     update: function (){
-        if(playerLife < 3){
-            lifeCollection.remove(lifeCollection.children[playerLife]);
-        }
+
 
 
       
 
-
-        if(counter <= 0 || playerLife <= 0){
-            console.log('game over');
-           info1.x = game.world.width / 2;
-           info1.y = game.world.height / 2;
-           info1.alpha = 1;
-           game.paused = true;
-           info1.loadTexture('infoX');
-           playerLife = 0;
-    
-        }
-    
-    
-    
-        if(germ.length == 0 && germ_N.length == 0){
-            playerLife = 0;
-            console.log( "You won" );
-            info1.x = game.world.width / 2;
-            info1.y = game.world.height / 2;
-    
-            info1.width = (game.world.width) - 100 ;
-            info1.height = (game.world.height /2) + 50;
-    
-            info1.alpha = 1;
-            game.paused = true;
-            info1.loadTexture('infoWin');
+        if(playerLife < 3){
+            lifeCollection.remove(lifeCollection.children[playerLife]);
         }
 
         control_paddle(player,game.input.x);
@@ -210,8 +195,12 @@ var game_Renal = {
            if( game.physics.arcade.overlap( germ.children[i],ball) ){
         //    console.log( germ.children[i].key );
             rot = !rot;     //change rotation
-            game.physics.arcade.collide(germ,ball);   //ball will collide with the germ
-            game.physics.arcade.collide(superGerm,ball);   //ball will collide with the germ
+            game.physics.arcade.collide(germ,ball, function(){
+                game.sound.play('pongScore');
+            });   //ball will collide with the germ
+            game.physics.arcade.collide(superGerm,ball, function(){
+                game.sound.play('pongScore');
+            });   //ball will collide with the germ
             
     
             if(germ.children[i].key == 'superGerm'){
@@ -245,15 +234,20 @@ var game_Renal = {
 
     
     
-        game.physics.arcade.collide(player,ball);   //ball will collide with the player
-        game.physics.arcade.collide(blockage,ball);   //ball will collide with the player
-        game.physics.arcade.collide(dangerousBlockage,ball);   //ball will collide with the player
-    
-    
-           // add its functionality
+        game.physics.arcade.collide(player,ball, function(){
+            game.sound.play('noiseCollector');
+        });   //ball will collide with the player
+        game.physics.arcade.collide(blockage,ball, function(){
+            game.sound.play('noiseCollector');
+        });   //ball will collide with the player
+        game.physics.arcade.collide(dangerousBlockage,ball, function(){
+            game.sound.play('noiseCollector');
+        });   //ball will collide with the player
+        
+        
+            // add its functionality
         germFunction(false);
-    
-    
+        
        if(ball_launched){
            if(rot == true){
     
@@ -263,12 +257,41 @@ var game_Renal = {
     
            }
        }
+
+       if(counter <= 0 || playerLife <= 0){
+        console.log('game over');
+       info1.x = game.world.width / 2;
+       info1.y = game.world.height / 2;
+       info1.alpha = 1;
+       game.paused = true;
+       info1.loadTexture('infoX');
+       playerLife = 0;
+       lifeCollection.alpha = 0;
+
+    }
+
+
+
+    if(germ.length == 0 && germ_N.length == 0){
+        playerLife = 0;
+        console.log( "You won" );
+        info1.x = game.world.width / 2;
+        info1.y = game.world.height / 2;
+
+        info1.width = (game.world.width) - 100 ;
+        info1.height = (game.world.height /2) + 50;
+
+        info1.alpha = 1;
+        lifeCollection.alpha = 0;
+        game.paused = true;
+        info1.loadTexture('infoWin');
+        
+    }
+
+
     }
 
 }
-
-
-    
     var player; //will contain the paddle
     var enterKey;   //holds the event
     var ball_launched;  // is the ball launched bool
@@ -287,6 +310,7 @@ var game_Renal = {
     var renalog_icon;   //renalog icon
     var whiteBG;
     var lifeCollection;
+    var bgmSound;
     
     //hide the info 
     function hideInfo(){
@@ -313,8 +337,6 @@ var game_Renal = {
         text.setText('Time: ' + counter);
     
     }
-    
-    
     
     
     
@@ -387,10 +409,7 @@ var game_Renal = {
             xpos+=xposInc;
         }
       // console.log(superGermCounter);
-        
-        
-        
-    
+     
     }
     
     function germFunction(isItN){
@@ -493,7 +512,6 @@ var game_Renal = {
     
     }
     
-    
     function create_block(){
        
         createGroupOfBlockage(20,0,0);
@@ -530,7 +548,6 @@ var game_Renal = {
         createGroupOfBlockage(1,game.world.width- 50 * 1,250 + 25);
         createGroupOfBlockage(1,game.world.width- 50 * 1,200 + 25);
         createGroupOfBlockage(1,game.world.width- 50 * 1,150 + 25);
-        
         createGroupOfBlockage(1,game.world.width- 50 * 1,100 + 25);
         createGroupOfBlockage(2,game.world.width- 50 * 1,50 + 25);
     }
@@ -541,10 +558,6 @@ var game_Renal = {
         createGroupOfDangerousBlockage(16,0,75 + 200 + (50 *9) + 250);
         
     }
-    
-    
-    
-    
     
     /* FUNCTIONALS */
     
@@ -603,13 +616,17 @@ var game_Renal = {
      }
      
      function restartGame(){
+        bgmSound.stop();
         playerLife = 3;
         superGermCounter = 0;
         info1.alpha = 0; //hides the info every restart
         game.paused = false;
          counter = maxTime;
+         lifeCollection = 1;
          playerScore = 0;;
          this.game.state.restart();  //restarts the game
+
+
 
      }
 
